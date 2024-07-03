@@ -268,5 +268,14 @@ synthetic_data.shape
 columns = binary_cols.append(ordinal_cols).append(continuous_cols)
 synthetic_data = pd.DataFrame(synthetic_data, columns=columns)
 
+synthetic_data['last_visit'].describe()
+
+mci['last_visit'].describe()
+
+# set last_visit to have the same distribution as the original data
+synthetic_data['last_visit2'] = np.random.choice(mci['last_visit'], num_samples)
+
+synthetic_data['last_visit2'].describe()
+
 # save generated data
 synthetic_data.to_csv('data/generated__mci_data.csv')
