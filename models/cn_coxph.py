@@ -1,93 +1,66 @@
-# create a cox proportional hazards model
-
-import numpy as np
 import pandas as pd
 from lifelines import CoxPHFitter
 from lifelines.utils import concordance_index
-from sklearn.model_selection import train_test_split
+import numpy as np
 
-# Read in data
-train = pd.read_csv('data/generated_cn_data.csv')
+indices = []
 
-# drop first column
-# train = train.drop(train.columns[0], axis=1)
+for i in range(100):
+    training = pd.read_csv('data/generated_cn_data.csv')
 
-# Change last_DX to boolean
-train['last_DX'] = train['last_DX'].astype(bool)
+    # drop first column
+    training = training.drop(training.columns[0], axis=1)
 
-# # Change last_visit to last_visit2
-train['last_visit'] = train['last_visit2']
+    # remove columns with low variance
+    training = training.loc[:, training.var() > 0.001]
 
-# drop last_visit2
-train = train.drop('last_visit2', axis=1)
-# check for missing values
-print(train.isnull().sum())
+    # Change last_DX to boolean
+    # train['last_DX'] = train['last_DX'].astype(bool)
 
-val = pd.read_csv('data/mci_preprocessed_wo_csf_real.csv')
+    # read in real data
+    val = pd.read_csv('data/cn_preprocessed_wo_csf_real.csv')
 
-val['last_DX'] = val['last_DX'].astype(bool)
+    # only keep columns that are in training
+    val = val[training.columns]
 
-# reorder train columns to match val columns order
-train = train[val.columns]
+    # bootstrap the data so that it has 1000 rows
+    val = val.sample(n=1000, replace=True)
 
-# check for missing values
-print(val.isnull().sum())
+    val['last_DX'] = val['last_DX'].astype(int)
 
-# do the same for all ordinal columns
-for col in val.columns:
-    if val[col].nunique() < 10:
-        real_prop = val[col].value_counts(normalize=True) * 100
-        synth_prop = train[col].value_counts(normalize=True) * 100
-        prop_dict = real_prop.to_dict()
-        synth_dict = synth_prop.to_dict()
-        mapping_dict = dict(zip(synth_dict.keys(), prop_dict.keys()))
-        train[col] = train[col].map(mapping_dict)
+    # change last_DX to boolean
+    # val['last_DX'] = val['last_DX'].astype(bool)
 
-# check for missing values
-print(val.isnull().sum())
-print(train.isnull().sum())
+    # change last_visit to int
+    val['last_visit'] = val['last_visit'].astype(int)
 
+    # reorder train columns to match val columns order
+    training = training[val.columns]
 
-# split the validation data into val and test
-val, test = train_test_split(val, test_size=0.2, random_state=0)
+    # scale age
+    training['AGE'] = (training['AGE'] - training['AGE'].mean()) / training['AGE'].std()
 
-# split the train data into X and y
-y_train = train[['last_DX', 'last_visit']]
-y_train = y_train.to_records(index=False)
+    # count na values by column
+    print(training.isna().sum().sort_values(ascending=False))
 
-X_train = train.drop(['last_DX', 'last_visit'], axis=1)
-
-# split the val data into X and y
-y_val = val[['last_DX', 'last_visit']]
-y_val = y_val.to_records(index=False)
-
-X_val = val.drop(['last_DX', 'last_visit'], axis=1)
-
-# split the test data into X and y
-y_test = test[['last_DX', 'last_visit']]
-y_test = y_test.to_records(index=False)
-
-X_test = test.drop(['last_DX', 'last_visit'], axis=1)
-
-# check for missing values
-print(X_train.isnull().sum())
-print(X_val.isnull().sum())
-print(X_test.isnull().sum())
-
-# drop columns with missing values
-train = train.dropna(axis=1)
-val = val.dropna(axis=1)
-test = test.dropna(axis=1)
+    # drop na values
+    training = training.dropna()
+    val = val.dropna()
+    print(val.isna().sum().sort_values(ascending=False))
 
 
+    # create a cox proportional hazards model
+    cph = CoxPHFitter(penalizer=0.001)
 
-# create a cox proportional hazards model
-cph = CoxPHFitter(penalizer=0.1)
-cph.fit(train, duration_col='last_visit', event_col='last_DX')
+    # cph.fit_options = dict(step_size=0.0005)
 
-# predict on validation data
-val_preds = cph.predict_expectation(val)
+    cph.fit(training, duration_col='last_visit', event_col='last_DX')
 
-# calculate concordance index
-c_index = concordance_index(val['last_visit'], val_preds)
+    c_index = concordance_index(val['last_visit'], cph.predict_partial_hazard(val), val['last_DX'])
+    indices.append(c_index)
 
+
+# get the average of the indices and the standard deviation
+indices = np.array(indices)
+avg = np.mean(indices)
+std = np.std(indices)

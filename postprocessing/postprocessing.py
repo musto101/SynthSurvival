@@ -2,6 +2,34 @@ import pandas as pd
 import numpy as np
 import torch
 from torch import nn
+from scipy.stats import rankdata
+
+
+def match_distributions_fixed(source, target):
+    """
+    Adjust the distribution of source to match the target using ECDF matching.
+
+    Parameters:
+    source (pd.Series): The source data to be adjusted.
+    target (pd.Series): The target data to match the distribution to.
+
+    Returns:
+    pd.Series: The adjusted source data.
+    """
+    # Rank the source data
+    source_ranks = rankdata(source, method='ordinal')
+    # Sort the target data
+    target_sorted = np.sort(target)
+
+    # Ensure target_sorted has the same length as source_ranks
+    if len(target_sorted) < len(source_ranks):
+        target_sorted = np.concatenate(
+            [target_sorted, np.repeat(target_sorted[-1], len(source_ranks) - len(target_sorted))])
+
+    # Map source ranks to target sorted values
+    target_mapped = target_sorted[source_ranks - 1]
+
+    return target_mapped
 
 class EncoderSubnet(nn.Module):
     def __init__(self, input_dim, latent_dim, hidden_dim, dropout, activation=nn.Tanh):
@@ -270,12 +298,19 @@ synthetic_data = pd.DataFrame(synthetic_data, columns=columns)
 
 synthetic_data['last_visit'].describe()
 
-mci['last_visit'].describe()
+# Extract the last_visit columns
+mci_last_visit = mci['last_visit']
+synth_last_visit = synthetic_data['last_visit']
 
-# set last_visit to have the same distribution as the original data
-synthetic_data['last_visit2'] = np.random.choice(mci['last_visit'], num_samples)
+# Match the distribution
+generated_last_visit_matched_fixed = match_distributions_fixed(synth_last_visit, mci_last_visit)
 
-synthetic_data['last_visit2'].describe()
+# Replace the 'last_visit' column in the generated dataframe with the matched values
+synthetic_data['last_visit'] = generated_last_visit_matched_fixed
+
+# check the distribution of the last_visit column
+synthetic_data['last_visit'].describe()
+
 
 # save generated data
 synthetic_data.to_csv('data/generated__mci_data.csv')

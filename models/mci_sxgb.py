@@ -10,7 +10,7 @@ indices = []
 
 for i in range(100):
     # Read in data
-    train = pd.read_csv('data/generated_cn_data.csv')
+    train = pd.read_csv('data/generated__mci_data.csv')
 
     # drop first column
     train = train.drop(train.columns[0], axis=1)
@@ -19,7 +19,7 @@ for i in range(100):
     # train['last_DX'] = train['last_DX'].astype(bool)
 
     # read in real data
-    val = pd.read_csv('data/cn_preprocessed_wo_csf_real.csv')
+    val = pd.read_csv('data/mci_preprocessed_wo_csf_real.csv')
 
     val['last_DX'] = val['last_DX'].astype(int)
 
