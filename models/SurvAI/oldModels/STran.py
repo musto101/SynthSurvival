@@ -12,10 +12,6 @@ import torch.nn.functional as F
 import math, copy, time
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
-import matplotlib
-from lifelines import *
-import pandas as pd
 import argparse
 from operator import itemgetter
 from concordance import concordance_index

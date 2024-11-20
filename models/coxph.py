@@ -11,9 +11,6 @@ for i in range(10):
     # drop first column
     training = training.drop(training.columns[0], axis=1)
 
-    # Change last_DX to boolean
-    # train['last_DX'] = train['last_DX'].astype(bool)
-
     # read in real data
     val = pd.read_csv('data/mci_preprocessed_wo_csf_real.csv')
 
@@ -21,9 +18,6 @@ for i in range(10):
     val = val.sample(n=1000, replace=True)
 
     val['last_DX'] = val['last_DX'].astype(int)
-
-    # change last_DX to boolean
-    # val['last_DX'] = val['last_DX'].astype(bool)
 
     # change last_visit to int
     val['last_visit'] = val['last_visit'].astype(int)
@@ -43,12 +37,8 @@ for i in range(10):
     indices.append(c_index)
 
 
-
-# get the average of the indices and the standard deviation
-
 indices = np.array(indices)
 avg = np.mean(indices)
 std = np.std(indices)
-
 
 

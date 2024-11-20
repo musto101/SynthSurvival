@@ -410,16 +410,10 @@ for i in range(10):
     # drop first column
     training = training.drop(training.columns[0], axis=1)
 
-    # Change last_DX to boolean
-    # train['last_DX'] = train['last_DX'].astype(bool)
-
     # read in real data
     val = pd.read_csv('data/mci_preprocessed_wo_csf_real.csv')
 
     val['last_DX'] = val['last_DX'].astype(int)
-
-    # change last_DX to boolean
-    # val['last_DX'] = val['last_DX'].astype(bool)
 
     # change last_visit to int
     val['last_visit'] = val['last_visit'].astype(int)
@@ -438,40 +432,18 @@ for i in range(10):
 
     # split the train data into X and y
     y_train = training[['last_DX', 'last_visit']]
-    # y_train = y_train.to_records(index=False)
 
     X_train = training.drop(['last_DX', 'last_visit'], axis=1)
 
     # split the val data into X and y
     y_val = val[['last_DX', 'last_visit']]
-    # y_val = y_val.to_records(index=False)
 
     X_val = val.drop(['last_DX', 'last_visit'], axis=1)
 
     # split the test data into X and y
     y_test = test[['last_DX', 'last_visit']]
-    # y_test = y_test.to_records(index=False)
 
     X_test = test.drop(['last_DX', 'last_visit'], axis=1)
-
-    # parameters for testing
-    # N = 6
-    # num_heads = 8
-    # d_model = 64
-    # d_ff = 256
-    # drop_prob = 0.1
-    # lr = 0.0001
-    # coeff = 1.0
-    # coeff2 = 1.0
-    #
-    # opt.N = N
-    # opt.num_heads = num_heads
-    # opt.d_model = d_model
-    # opt.d_ff = d_ff
-    # opt.drop_prob = drop_prob
-    # opt.lr = lr
-    # opt.coeff = coeff
-    # opt.coeff2 = coeff2
 
     def objective(trial):
         N = trial.suggest_int('N', 1, 10)
@@ -484,51 +456,27 @@ for i in range(10):
         coeff2 = trial.suggest_float('coeff2', 0.1, 10)
 
         opt.N = N
-        # opt.num_heads = num_heads
-        # opt.d_model = d_model
         opt.d_ff = d_ff
         opt.drop_prob = drop_prob
         opt.lr = lr
         opt.coeff = coeff
         opt.coeff2 = coeff2
 
-        # train_features = X_train.drop(['last_visit', 'last_DX'], axis=1).to_numpy()
         train_features = X_train.to_numpy()
-            # check train_features is a numpy array
-        print(type(train_features))
 
-        # val_features = X_val.drop(['last_visit', 'last_DX'], axis=1).to_numpy()
         val_features = X_val.to_numpy()
-        # check val_features is a numpy array
-        print(type(val_features))
-        # test_features = X_test.drop(['last_visit', 'last_DX'], axis=1).to_numpy()
         test_features = X_test.to_numpy()
-        # check test_features is a numpy array
-        print(type(test_features))
         features = [train_features, val_features, test_features]
-        # check features is a list
-        print(type(features))
 
         train_labels = y_train.to_numpy()
-        # check train_labels is a numpy array
-        print(type(train_labels))
 
         val_labels = y_val.to_numpy()
-        # check val_labels is a numpy array
-        print(type(val_labels))
         test_labels = y_test.to_numpy()
-        # check test_labels is a numpy array
-        print(type(test_labels))
         labels = [train_labels, val_labels, test_labels]
-        # check labels is a list
-        print(type(labels))
 
         num_features = train_features.shape[1]
-        # check num_features is an integer
-        print(type(num_features))
 
         total_data = train_features.shape[0] + val_features.shape[0] + test_features.shape[0]
-
 
         score, test = main(features, labels, num_features)
 
@@ -540,82 +488,8 @@ for i in range(10):
     study.optimize(objective, n_trials=10, show_progress_bar=True)
 
     score = study.best_trial.value
-    # print(study.best_trial.value)
-    #
-    # # modify opt to include the best hyperparameters
-    # opt.N = study.best_params['N']
-    # # opt.num_heads = study.best_params['num_heads']
-    # # opt.d_model = study.best_params['d_model']
-    # opt.d_ff = study.best_params['d_ff']
-    # opt.drop_prob = study.best_params['drop_prob']
-    # opt.lr = study.best_params['lr']
-    # opt.coeff = study.best_params['coeff']
-    # opt.coeff2 = study.best_params['coeff2']
-    #
-    # # train_features = X_train.drop(['last_visit', 'last_DX'], axis=1).to_numpy()
-    # train_features = X_train.to_numpy()
-    #         # check train_features is a numpy array
-    # print(type(train_features))
-    #
-    # # val_features = X_val.drop(['last_visit', 'last_DX'], axis=1).to_numpy()
-    # val_features = X_val.to_numpy()
-    # # check val_features is a numpy array
-    # print(type(val_features))
-    # # test_features = X_test.drop(['last_visit', 'last_DX'], axis=1).to_numpy()
-    # test_features = X_test.to_numpy()
-    # # check test_features is a numpy array
-    # print(type(test_features))
-    # features = [train_features, val_features, test_features]
-    #     # check features is a list
-    # print(type(features))
-    #
-    # train_labels = y_train.to_numpy()
-    #     # check train_labels is a numpy array
-    # print(type(train_labels))
-    #
-    # val_labels = y_val.to_numpy()
-    #     # check val_labels is a numpy array
-    # print(type(val_labels))
-    # test_labels = y_test.to_numpy()
-    #     # check test_labels is a numpy array
-    # print(type(test_labels))
-    # labels = [train_labels, val_labels, test_labels]
-    #     # check labels is a list
-    # print(type(labels))
-    #
-    # num_features = train_features.shape[1]
-    #     # check num_features is an integer
-    # print(type(num_features))
-
-    # # run the best model
-    # train_features = pd.read_csv(opt.data_dir + '/train_features.csv', header=0, index_col=False).to_numpy()
-    # val_features = pd.read_csv(opt.data_dir + '/val_features.csv', header=0, index_col=False).to_numpy()
-    # test_features = pd.read_csv(opt.data_dir + '/test_features.csv', header=0, index_col=False).to_numpy()
-    # features = [train_features, val_features, test_features]
-    #
-    # train_labels = pd.read_csv(opt.data_dir + '/train_labels.csv', header=0, index_col=False).to_numpy()
-    # val_labels = pd.read_csv(opt.data_dir + '/val_labels.csv', header=0, index_col=False).to_numpy()
-    # test_labels = pd.read_csv(opt.data_dir + '/test_labels.csv', header=0, index_col=False).to_numpy()
-    # labels = [train_labels, val_labels, test_labels]
-    #
-    # num_features = train_features.shape[1]
-    # print('train features shape', train_features.shape)
-    # print('train labels shape', train_labels.shape)
-    # print('val features shape', val_features.shape)
-    # print('val labels shape', val_labels.shape)
-    # print('test features shape', test_features.shape)
-    #
-    # print('num features', num_features)
-    # total_data = train_features.shape[0] + val_features.shape[0] + test_features.shape[0]
-    # print('total data', total_data)
-    #
-    # print('train max label', train_labels[:, 0].max())
-
-    # score, test = main(features, labels, num_features)
     indices.append(score)
 
 indices = np.array(indices)
 print('Mean test concordance index', np.mean(indices))
 print('Std test concordance index', np.std(indices))
-
-# print('Mean test concordance index', np.mean(preds))

@@ -1,4 +1,3 @@
-# run survival xgboost model on synth data
 import pandas as pd
 import xgboost as xgb
 from lifelines.utils import concordance_index
@@ -15,16 +14,10 @@ for i in range(100):
     # drop first column
     train = train.drop(train.columns[0], axis=1)
 
-    # Change last_DX to boolean
-    # train['last_DX'] = train['last_DX'].astype(bool)
-
     # read in real data
     val = pd.read_csv('data/mci_preprocessed_wo_csf_real.csv')
 
     val['last_DX'] = val['last_DX'].astype(int)
-
-    # change last_DX to boolean
-    # val['last_DX'] = val['last_DX'].astype(bool)
 
     # change last_visit to int
     val['last_visit'] = val['last_visit'].astype(int)
@@ -47,50 +40,23 @@ for i in range(100):
 
     # split the train data into X and y
     y_train = train[['last_DX', 'last_visit']]
-    # y_train = y_train.to_records(index=False)
 
     X_train = train.drop(['last_DX', 'last_visit'], axis=1)
 
     # split the val data into X and y
     y_val = val[['last_DX', 'last_visit']]
-    # y_val = y_val.to_records(index=False)
 
     X_val = val.drop(['last_DX', 'last_visit'], axis=1)
 
     # split the test data into X and y
     y_test = test[['last_DX', 'last_visit']]
-    # y_test = y_test.to_records(index=False)
 
-    # Check for NaNs in target variable
-    print(y_train.isna().sum())
-    print(y_val.isna().sum())
-    print(y_test.isna().sum())
 
     X_test = test.drop(['last_DX', 'last_visit'], axis=1)
 
     dtrain = xgb.DMatrix(X_train, label=y_train['last_DX'], weight=y_train['last_visit'])
     dval = xgb.DMatrix(X_val, label=y_val['last_DX'], weight=y_val['last_visit'])
     dtest = xgb.DMatrix(X_test,  label=y_test['last_DX'], weight=y_test['last_visit'])
-
-
-    # parameters for testing
-    # params = {
-    #     'objective': 'survival:cox',
-    #     'eval_metric': 'cox-nloglik',
-    #     'verbosity': 0,
-    #     'booster': 'gbtree',
-    #     'nthread': 4,
-    #     'max_depth': 6,
-    #     'eta': 0.01,
-    #     'subsample': 0.8,
-    #     'colsample_bytree': 0.8,
-    #     'lambda': 0.01,
-    #     'alpha': 0.01,
-    #     'min_child_weight': 0.001,
-    #     'gamma': 0.001,
-    #     'n_estimators': 1000
-    # }
-
 
     def objective(trial):
 
@@ -126,16 +92,6 @@ for i in range(100):
         # predict on validation set
         y_pred = model.predict(dval)
 
-        # check for NaNs in predictions
-        print(np.isnan(y_pred).sum())
-
-        # if there are nan values in y_pred, continue to the next iteration
-        # if np.isnan(y_pred).sum() > 0:
-        #     model = xgb.train(params, dtrain)
-        #     y_pred = model.predict(dval)
-        #
-        # # check for nan values in y_pred
-        # print(np.isnan(y_pred).sum())
 
         if np.isnan(y_pred).any():
             print(f"Trial failed due to NaNs in predictions. Parameters: {params}")
@@ -182,9 +138,6 @@ for i in range(100):
 indices = np.array(indices)
 avg = np.mean(indices)
 std = np.std(indices)
-
-print('average c_index', avg)
-print('std', std)
 
 
 
